@@ -1,5 +1,6 @@
 using BepInEx;
 using UnityEngine;
+using UnityEngine.XR;
 
 [BepInPlugin("luikis.hardmodmenu.test", "Lukis Hard Mod Menu", "Test")]
 public class LukisHardModMenu : BaseUnityPlugin
@@ -12,13 +13,17 @@ public class LukisHardModMenu : BaseUnityPlugin
     private GUIStyle buttonStyle;
     private GUIStyle labelStyle;
 
+    private bool lastYState;
+
     private void Start()
     {
         windowStyle = new GUIStyle(GUI.skin.window);
-        windowStyle.normal.background = MakeTexture(new Color(0.45f, 0.45f, 0.45f));
+        windowStyle.normal.background =
+            MakeTexture(new Color(0.45f, 0.45f, 0.45f));
 
         buttonStyle = new GUIStyle(GUI.skin.button);
-        buttonStyle.normal.background = MakeTexture(new Color(0.20f, 0.20f, 0.20f));
+        buttonStyle.normal.background =
+            MakeTexture(new Color(0.20f, 0.20f, 0.20f));
         buttonStyle.normal.textColor = Color.white;
         buttonStyle.fontSize = 16;
 
@@ -29,11 +34,34 @@ public class LukisHardModMenu : BaseUnityPlugin
 
     private void Update()
     {
-        // F1 opens/closes the menu
+        // PC keyboard testing
         if (Input.GetKeyDown(KeyCode.F1))
         {
-            menuOpen = !menuOpen;
+            ToggleMenu();
         }
+
+        // Left controller Y button
+        InputDevice leftController =
+            InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+
+        if (leftController.isValid &&
+            leftController.TryGetFeatureValue(
+                CommonUsages.secondaryButton,
+                out bool yPressed))
+        {
+            // Only toggle once when the button is pressed
+            if (yPressed && !lastYState)
+            {
+                ToggleMenu();
+            }
+
+            lastYState = yPressed;
+        }
+    }
+
+    private void ToggleMenu()
+    {
+        menuOpen = !menuOpen;
     }
 
     private void OnGUI()
@@ -58,7 +86,9 @@ public class LukisHardModMenu : BaseUnityPlugin
             labelStyle
         );
 
-        // Empty buttons for now — no mods.
+        // Empty buttons for now.
+        // No mods/features yet.
+
         GUI.Button(
             new Rect(15, 80, 180, 40),
             "Empty",
@@ -71,6 +101,7 @@ public class LukisHardModMenu : BaseUnityPlugin
             buttonStyle
         );
 
+        // Drag the menu
         GUI.DragWindow(
             new Rect(0, 0, 10000, 30)
         );
@@ -79,8 +110,10 @@ public class LukisHardModMenu : BaseUnityPlugin
     private Texture2D MakeTexture(Color color)
     {
         Texture2D texture = new Texture2D(1, 1);
+
         texture.SetPixel(0, 0, color);
         texture.Apply();
+
         return texture;
     }
 }
